@@ -1,0 +1,319 @@
+/* Стили для панели переключателей */
+.controls-panel {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #2a2a2a;
+    border-bottom: 1px solid #444444;
+    margin-bottom: 10px;
+}
+
+/* Скрываем controls-panel, когда participants-list скрыт */
+.participants-list.list-hidden .controls-panel {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Стили для контейнера кнопок Undo и Redo при скрытой панели */
+.history-controls {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    display: flex;
+    z-index: 20;
+}
+
+.switch-container {
+    display: flex;
+    align-items: center;
+    margin: 0 5px;
+}
+
+.switch-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    padding: 0;
+    background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    color: #e0e0e0;
+    cursor: pointer;
+    font-size: 18px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+}
+
+.switch-button svg {
+    margin: 0;
+}
+
+.switch-button.active {
+    background: linear-gradient(135deg, #5a6b7f, #3a3a3a);
+}
+
+.switch-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, #444444, #2a2a2a);
+}
+
+.switch-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Остальные стили */
+.roulette-app {
+    background-color: #1e1e1e;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.participants-list {
+    width: 328px;
+    height: 100vh;
+    background-color: #2a2a2a;
+    padding: 15px;
+    color: #ffffff;
+    box-sizing: border-box;
+    transition: width 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.participants-list.list-hidden {
+    width: 0;
+    padding: 0;
+}
+
+.participants-list.list-hidden .participants-container {
+    display: none;
+}
+
+.participants-container {
+    flex-grow: 1;
+    max-height: calc(100vh - 74px);
+    overflow-y: auto;
+    overflow-x: hidden !important;
+}
+
+/* Стили для режима "КРАСИВО" */
+.participants-container.animated::-webkit-scrollbar {
+    width: 8px;
+}
+
+.participants-container.animated::-webkit-scrollbar-track {
+    background: #3a3a3a;
+    border-radius: 4px;
+}
+
+.participants-container.animated::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #5a6b7f, #3a3a3a);
+    border-radius: 4px;
+}
+
+.participants-container.animated::-webkit-scrollbar-thumb:hover {
+    background: #7a8b9f;
+}
+
+/* Стили для режима "оптимизация" (react-window) */
+.participants-container.optimized {
+    overflow-y: hidden;
+}
+
+.react-window-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.react-window-list::-webkit-scrollbar-track {
+    background: #3a3a3a;
+    border-radius: 4px;
+}
+
+.react-window-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #5a6b7f, #3a3a3a);
+    border-radius: 4px;
+}
+
+.react-window-list::-webkit-scrollbar-thumb:hover {
+    background: #7a8b9f;
+}
+
+.participant-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    width: 80%;
+    left: 5%;
+    right: 5%;
+    height: 25px;
+    margin-bottom: 12px;
+    background-color: #3a3a3a;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.participant-item:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    background-color: #444444;
+}
+
+.participant-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    color: #e0e0e0;
+}
+
+.hidden .participant-name {
+    color: #666666;
+}
+
+.toggle-icon {
+    font-size: 18px;
+    color: #e0e0e0;
+}
+
+.toggle-icon:hover {
+    color: #1e90ff;
+}
+
+.list-toggle-area {
+    position: absolute;
+    top: 10%;
+    bottom: 10%;
+    left: 328px;
+    width: 50px;
+    border-bottom-right-radius: 30px;
+    border-top-right-radius: 30px;
+    background-color: transparent;
+    cursor: pointer;
+    transition: left 0.3s ease, background-color 0.2s ease;
+    z-index: 10;
+}
+
+.footer-toggle-area:hover,
+.list-toggle-area:hover {
+    background-color: rgba(90, 107, 127, 0.05);
+}
+
+.list-toggle-area.list-hidden {
+    left: 0;
+}
+
+.list-toggle-bar {
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 100px;
+    border-bottom-right-radius: 8px;
+    border-top-right-radius: 8px;
+    background-color: #444444;
+    transition: background 0.2s ease;
+}
+
+.footer-toggle-area:hover .footer-toggle-bar,
+.list-toggle-area:hover .list-toggle-bar {
+    background-color: #5a6b7f;
+}
+
+.list-toggle-bar.list-hidden {
+    left: 15px;
+}
+
+.list-toggle-bar:hover {
+    background-color: #555555;
+}
+
+.footer-toggle-area {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20%;
+    height: 40px;
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    background-color: transparent;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.footer-toggle-area:hover {
+    background-color: rgba(90, 107, 127, 0.05);
+}
+
+.footer-toggle-area.footer-hidden {
+    bottom: 0;
+    pointer-events: auto;
+}
+
+.footer-toggle-bar {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 8px;
+    background-color: #444444;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    transition: background 0.2s ease;
+    z-index: 11;
+}
+
+.footer-toggle-area:hover .footer-toggle-bar {
+    background-color: #5a6b7f;
+}
+
+.footer-toggle-bar:hover {
+    background-color: #555555;
+}
+
+.footer-toggle-bar.footer-hidden {
+    bottom: 10px;
+}
+
+.visible-count-footer {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    color: #e0e0e0;
+    background-color: #333333;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.visible-count-footer.footer-hidden {
+    transform: translateX(-50%) translateY(100px);
+}
+
+.participants-list.error {
+    color: #ff4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+}

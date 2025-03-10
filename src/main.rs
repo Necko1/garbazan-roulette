@@ -59,8 +59,8 @@ pub async fn create_roulette(upload: Form<Upload<'_>>) -> Result<Json<String>, S
     };
     
     let participants: Vec<String> = upload.split("\n")
-        .map(String::from)
-        .filter(|x| !x.trim().is_empty())
+        .map(|s| s.trim().to_string())
+        .filter(|x| !x.is_empty())
         .collect();
     
     if participants.is_empty() {
