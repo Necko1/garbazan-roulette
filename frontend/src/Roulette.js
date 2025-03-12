@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import './Roulette.css';
 import Participant from "./Participant";
-import { FaEye, FaEyeSlash, FaMagic, FaLock, FaUnlock, FaUndo, FaRedo } from 'react-icons/fa';
+import Wheel from "./Wheel";
+import { FaEye, FaEyeSlash, FaMagic, FaLock, FaUnlock, FaUndo, FaRedo, FaPlay, FaEye as FaEyeIcon, FaUserSlash, FaAdjust } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FixedSizeList } from 'react-window';
 
@@ -14,23 +15,36 @@ function Roulette() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isFooterHidden, setIsFooterHidden] = useState(false);
-    const [isListHidden, setIsListHidden] = useState(false);
+    const [isListHidden, setIsListHidden] = useState(window.innerWidth < window.innerHeight);
+    const [isRightPanelHidden, setIsRightPanelHidden] = useState(window.innerWidth < window.innerHeight);
     const [hideHidden, setHideHidden] = useState(false);
     const [useAnimations, setUseAnimations] = useState(true);
     const [isLocked, setIsLocked] = useState(false);
     const [history, setHistory] = useState([]);
     const [historyIndex, setHistoryIndex] = useState(-1);
+    const [isSpinning, setIsSpinning] = useState(false);
+    const [spinTrigger, setSpinTrigger] = useState(0);
+    const [hideNames, setHideNames] = useState(false);
+    const [hideAfterSpin, setHideAfterSpin] = useState(false);
+    const [lastSelectedParticipant, setLastSelectedParticipant] = useState(null);
+    const [isMonochrome, setIsMonochrome] = useState(false);
+    const [spinDuration, setSpinDuration] = useState(5);
 
     const happyEmojis = ['😀', '😃', '😄', '😁', '😆', '🙂', '😊'];
 
-    const generateColor = (name) => {
+    const generateColor = (name, monochrome = false) => {
         const seed = name.split('').reduce((acc, char, index) =>
             acc + char.charCodeAt(0) * (index + 1), 0
         );
-        const hue = (seed * 137 + name.length * 23) % 360;
-        const saturation = 70 + (seed % 30);
-        const lightness = 50 + (seed % 20);
-        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        if (monochrome) {
+            const lightness = 30 + (seed % 50);
+            return `hsl(0, 0%, ${lightness}%)`;
+        } else {
+            const hue = (seed * 137 + name.length * 23) % 360;
+            const saturation = 70 + (seed % 30);
+            const lightness = 50 + (seed % 20);
+            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        }
     };
 
     useEffect(() => {
@@ -42,7 +56,7 @@ function Roulette() {
 
         const fetchParticipants = async () => {
             try {
-                const response = await axios.get(`https://api.garbazan.xyz/roulette?uuid=${uuid}`);
+                const response = await axios.get(`https://api.necko.space/roulette?uuid=${uuid}`);
                 const nameColorMap = new Map();
 
                 if (response.data.vec.length >= 250) {
@@ -51,7 +65,7 @@ function Roulette() {
 
                 const participantsData = response.data.vec.map((name, index) => {
                     if (!nameColorMap.has(name)) {
-                        const color = generateColor(name);
+                        const color = generateColor(name, isMonochrome);
                         nameColorMap.set(name, color);
                     }
 
@@ -76,6 +90,14 @@ function Roulette() {
 
         fetchParticipants();
     }, [uuid]);
+
+    useEffect(() => {
+        const updatedParticipants = participants.map(participant => ({
+            ...participant,
+            color: generateColor(participant.name, isMonochrome)
+        }));
+        setParticipants(updatedParticipants);
+    }, [isMonochrome]);
 
     const toggleParticipant = (id) => {
         if (isLocked) return;
@@ -104,9 +126,39 @@ function Roulette() {
         setParticipants(history[historyIndex + 1]);
     };
 
+    const startSpin = useCallback(() => {
+        if (isSpinning) return;
+        console.log("Кнопка 'Крутить' нажата, запускаем вращение в Roulette");
+        setIsSpinning(true);
+        setSpinTrigger(prev => prev + 1);
+    }, [isSpinning]);
+
+    const handleSpinEnd = useCallback((selectedParticipant) => {
+        console.log("Вращение завершено в Roulette");
+        setIsSpinning(false);
+        setLastSelectedParticipant(selectedParticipant);
+        if (hideAfterSpin && selectedParticipant) {
+            const newParticipants = participants.map(p =>
+                p.id === selectedParticipant.id ? { ...p, isHidden: true } : p
+            );
+            setParticipants(newParticipants);
+            const newHistory = [...history.slice(0, historyIndex + 1), newParticipants];
+            setHistory(newHistory);
+            setHistoryIndex(newHistory.length - 1);
+        }
+    }, [hideAfterSpin, participants, history, historyIndex]);
+
     const toggleFooter = () => setIsFooterHidden(!isFooterHidden);
     const toggleList = () => setIsListHidden(!isListHidden);
+    const toggleRightPanel = () => setIsRightPanelHidden(!isRightPanelHidden);
     const toggleLock = () => setIsLocked(!isLocked);
+    const toggleHideNames = () => setHideNames(!hideNames);
+    const toggleHideAfterSpin = () => setHideAfterSpin(!hideAfterSpin);
+    const toggleMonochrome = () => setIsMonochrome(!isMonochrome);
+
+    const handleSpinDurationChange = (e) => {
+        setSpinDuration(parseFloat(e.target.value));
+    };
 
     const visibleParticipants = hideHidden ? participants.filter(p => !p.isHidden) : participants;
     const visibleCount = participants.filter(p => !p.isHidden).length;
@@ -132,7 +184,18 @@ function Roulette() {
 
     return (
         <div className="roulette-app">
-            {/* Кнопки Undo и Redo при скрытой панели */}
+            <Wheel
+                participants={participants}
+                hideHidden={hideHidden}
+                hideNames={hideNames}
+                spinTrigger={spinTrigger}
+                isSpinning={isSpinning}
+                onSpinEnd={handleSpinEnd}
+                lastSelectedParticipant={lastSelectedParticipant}
+                useAnimations={useAnimations}
+                spinDuration={spinDuration}
+            />
+
             {isListHidden && (
                 <div className="history-controls">
                     <div className="switch-container">
@@ -169,7 +232,6 @@ function Roulette() {
                             {isLocked ? <FaLock /> : <FaUnlock />}
                         </button>
                     </div>
-                    {/* Undo и Redo внутри controls-panel */}
                     {!isListHidden && (
                         <>
                             <div className="switch-container">
@@ -250,12 +312,88 @@ function Roulette() {
                     )}
                 </div>
             </div>
+
+            <div className={`right-panel ${isRightPanelHidden ? 'panel-hidden' : ''}`}>
+                <div className="right-panel-container">
+                    <div className="right-panel-controls">
+                        <div className="left-controls-group">
+                            <button
+                                className={`spin-button ${isSpinning ? 'spinning' : ''}`}
+                                onClick={startSpin}
+                                disabled={isSpinning}
+                                title="Крутить колесо"
+                            >
+                                <FaPlay /> Крутить
+                            </button>
+                            <button
+                                className={`switch-button toggle-hide-after-spin ${hideAfterSpin ? 'active' : ''}`}
+                                onClick={toggleHideAfterSpin}
+                                title={hideAfterSpin ? 'Отключить скрытие после вращения' : 'Скрывать выпавших после вращения'}
+                            >
+                                <FaUserSlash />
+                            </button>
+                        </div>
+                        <div className="right-controls-group">
+                            <button
+                                className={`switch-button toggle-names ${hideNames ? 'active' : ''}`}
+                                onClick={toggleHideNames}
+                                title={hideNames ? 'Показать никнеймы' : 'Скрыть никнеймы'}
+                            >
+                                {hideNames ? <FaEyeSlash /> : <FaEyeIcon />}
+                            </button>
+                            <button
+                                className={`switch-button toggle-monochrome ${isMonochrome ? 'active' : ''}`}
+                                onClick={toggleMonochrome}
+                                title={isMonochrome ? 'Выключить монохромный режим' : 'Включить монохромный режим'}
+                            >
+                                <FaAdjust />
+                            </button>
+                        </div>
+                    </div>
+                    <div className="spin-duration-control">
+                        <label htmlFor="spin-duration" className="spin-duration-label">
+                            Время вращения: {spinDuration === 0 ? 'Мгновенно' : `${spinDuration} сек`}
+                        </label>
+                        <input
+                            type="range"
+                            id="spin-duration"
+                            min="0"
+                            max="60"
+                            step="0.5"
+                            value={spinDuration}
+                            onChange={handleSpinDurationChange}
+                            className="spin-duration-slider"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {isRightPanelHidden && (
+                <button
+                    className="spin-button-top-right"
+                    onClick={startSpin}
+                    disabled={isSpinning}
+                    title="Крутить колесо"
+                >
+                    <FaPlay />
+                    {window.innerWidth < window.innerHeight && ' Крутить'}
+                </button>
+            )}
+
             <div
                 className={`list-toggle-area ${isListHidden ? 'list-hidden' : ''}`}
                 onClick={toggleList}
             >
                 <div className={`list-toggle-bar ${isListHidden ? 'list-hidden' : ''}`} />
             </div>
+
+            <div
+                className={`right-toggle-area ${isRightPanelHidden ? 'panel-hidden' : ''}`}
+                onClick={toggleRightPanel}
+            >
+                <div className={`right-toggle-bar ${isRightPanelHidden ? 'panel-hidden' : ''}`} />
+            </div>
+
             <div
                 className={`visible-count-footer ${isFooterHidden ? 'footer-hidden' : ''}`}
                 onClick={toggleFooter}

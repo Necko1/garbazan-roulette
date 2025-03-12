@@ -126,7 +126,7 @@ function Home() {
                 formData.append('text', text);
             }
 
-            const response = await axios.post('https://api.garbazan.xyz/roulette', formData);
+            const response = await axios.post('https://api.necko.space/roulette', formData);
 
             if (response.status !== 200) {
                 setError('Ошибка сервера');
