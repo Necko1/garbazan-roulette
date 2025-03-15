@@ -29,3 +29,11 @@
         margin-top: -5vh;
     }
 }
+
+.wheel-svg image {
+    transition: opacity 0.3s ease;
+}
+
+.wheel-svg image:hover {
+    opacity: 0.8;
+}

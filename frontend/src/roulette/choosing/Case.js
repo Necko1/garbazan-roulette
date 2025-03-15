@@ -9,7 +9,8 @@ const Case = ({
                   onSpinEnd,
                   hideAfterSpin,
                   lastSelectedParticipant,
-                  spinDuration
+                  spinDuration,
+                  baseItemsPerSecond
               }) => {
     const [localIsSpinning, setLocalIsSpinning] = useState(false);
     const [lastSpinTrigger, setLastSpinTrigger] = useState(0);
@@ -59,12 +60,9 @@ const Case = ({
     }, [participants]);
 
     const getScrollLength = () => {
-        const minItems = 75;
-        const baseItemsPerSecond = 20;
         const durationBasedLength = Math.floor(spinDuration * baseItemsPerSecond);
         const randomFactor = Math.random() * 0.5 + 0.75;
-        const randomizedLength = Math.floor(durationBasedLength * randomFactor);
-        return Math.max(minItems, randomizedLength);
+        return Math.max(10, Math.floor(durationBasedLength * randomFactor));
     };
 
     const updateCenterIndex = () => {

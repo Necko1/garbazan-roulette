@@ -1,11 +1,25 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, {useState, useEffect, useCallback, useMemo} from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import './Roulette.css';
 import Participant from "./Participant";
 import Wheel from "./choosing/Wheel";
 import Case from "./choosing/Case";
-import { FaEye, FaEyeSlash, FaMagic, FaLock, FaUnlock, FaUndo, FaRedo, FaPlay, FaEye as FaEyeIcon, FaUserSlash, FaAdjust, FaExchangeAlt } from 'react-icons/fa';
+import {
+    FaEye,
+    FaEyeSlash,
+    FaMagic,
+    FaLock,
+    FaUnlock,
+    FaUndo,
+    FaRedo,
+    FaPlay,
+    FaEye as FaEyeIcon,
+    FaUserSlash,
+    FaAdjust,
+    FaExchangeAlt,
+    FaRandom
+} from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FixedSizeList } from 'react-window';
 
@@ -31,8 +45,46 @@ function Roulette() {
     const [isMonochrome, setIsMonochrome] = useState(false);
     const [spinDuration, setSpinDuration] = useState(5);
     const [displayMode, setDisplayMode] = useState('wheel');
+    const [scrollSpeed, setScrollSpeed] = useState(720);
+    const [baseItemsPerSecond, setBaseItemsPerSecond] = useState(20);
+    const [maxSameNicknames, setMaxSameNicknames] = useState(1);
 
     const happyEmojis = ['😀', '😃', '😄', '😁', '😆', '🙂', '😊'];
+
+    const getMaxDuplicates = (participantsList) => {
+        const nameCount = {};
+        participantsList.forEach(p => {
+            nameCount[p.name] = (nameCount[p.name] || 0) + 1;
+        });
+        return Math.max(...Object.values(nameCount), 1);
+    };
+
+    const shuffleParticipants = () => {
+        if (isLocked) return;
+        const shuffled = [...participants].sort(() => Math.random() - 0.5);
+        setParticipants(shuffled);
+        const historyParticipants = shuffled.map(({ color, ...rest }) => rest);
+        const newHistory = [...history.slice(0, historyIndex + 1), historyParticipants];
+        setHistory(newHistory);
+        setHistoryIndex(newHistory.length - 1);
+    };
+
+    const getLimitedParticipants = (participantsList) => {
+        const nameCount = {};
+        return participantsList.filter(participant => {
+            nameCount[participant.name] = (nameCount[participant.name] || 0) + 1;
+            return nameCount[participant.name] <= maxSameNicknames;
+        });
+    };
+
+    const handleScrollSpeedChange = (e) => {
+        const value = parseFloat(e.target.value);
+        if (displayMode === 'wheel') {
+            setScrollSpeed(value);
+        } else {
+            setBaseItemsPerSecond(value);
+        }
+    };
 
     const generateColor = (name, monochrome = false) => {
         const seed = name.split('').reduce((acc, char, index) =>
@@ -59,19 +111,15 @@ function Roulette() {
         const fetchParticipants = async () => {
             try {
                 const response = await axios.get(`https://api.necko.space/roulette?uuid=${uuid}`);
-
                 if (response.data.vec.length >= 250) {
                     setUseAnimations(false);
                 }
-
-                const participantsData = response.data.vec.map((name, index) => {
-                    return {
-                        id: index + 1,
-                        name,
-                        isHidden: false,
-                        emoji: happyEmojis[Math.floor(Math.random() * happyEmojis.length)]
-                    };
-                });
+                const participantsData = response.data.vec.map((name, index) => ({
+                    id: index + 1,
+                    name,
+                    isHidden: false,
+                    emoji: happyEmojis[Math.floor(Math.random() * happyEmojis.length)]
+                }));
                 const participantsWithColors = participantsData.map(participant => ({
                     ...participant,
                     color: generateColor(participant.name, isMonochrome)
@@ -92,14 +140,10 @@ function Roulette() {
 
     const toggleParticipant = (id) => {
         if (isLocked) return;
-
         const newParticipants = participants.map(participant =>
-            participant.id === id
-                ? { ...participant, isHidden: !participant.isHidden }
-                : participant
+            participant.id === id ? { ...participant, isHidden: !participant.isHidden } : participant
         );
         setParticipants(newParticipants);
-
         const historyParticipants = newParticipants.map(({ color, ...rest }) => rest);
         const newHistory = [...history.slice(0, historyIndex + 1), historyParticipants];
         setHistory(newHistory);
@@ -129,13 +173,11 @@ function Roulette() {
 
     const startSpin = useCallback(() => {
         if (isSpinning) return;
-        console.log("Кнопка 'Крутить' нажата, запускаем вращение в Roulette");
         setIsSpinning(true);
         setSpinTrigger(prev => prev + 1);
     }, [isSpinning]);
 
     const handleSpinEnd = useCallback((selectedParticipant) => {
-        console.log("Вращение завершено в Roulette");
         setIsSpinning(false);
         setLastSelectedParticipant(selectedParticipant);
         if (hideAfterSpin && selectedParticipant) {
@@ -167,16 +209,22 @@ function Roulette() {
     };
     const toggleDisplayMode = () => {
         setDisplayMode(prevMode => prevMode === 'wheel' ? 'case' : 'wheel');
-        setIsSpinning(false); // Останавливаем вращение при смене режима
-        setSpinTrigger(0);    // Сбрасываем триггер
+        setIsSpinning(false);
+        setSpinTrigger(0);
     };
 
     const handleSpinDurationChange = (e) => {
         setSpinDuration(parseFloat(e.target.value));
     };
 
-    const visibleParticipants = hideHidden ? participants.filter(p => !p.isHidden) : participants;
-    const visibleCount = participants.filter(p => !p.isHidden).length;
+    const maxDuplicates = getMaxDuplicates(participants);
+    const visibleParticipants = useMemo(() => {
+        const limitedParticipants = getLimitedParticipants(participants);
+        return hideHidden
+            ? limitedParticipants.filter(p => !p.isHidden)
+            : limitedParticipants;
+    }, [participants, hideHidden, maxSameNicknames]);
+    const visibleCount = visibleParticipants.filter(p => !p.isHidden).length;
 
     const Row = ({ index, style }) => {
         const participant = visibleParticipants[index];
@@ -201,22 +249,24 @@ function Roulette() {
         <div className="roulette-app">
             {displayMode === 'wheel' ? (
                 <Wheel
-                    participants={participants}
+                    participants={visibleParticipants} // Передаем отфильтрованный список
                     hideNames={hideNames}
                     spinTrigger={spinTrigger}
                     onSpinEnd={handleSpinEnd}
                     lastSelectedParticipant={lastSelectedParticipant}
                     spinDuration={spinDuration}
+                    angularSpeed={scrollSpeed}
                 />
             ) : (
                 <Case
-                    participants={participants}
+                    participants={visibleParticipants} // Передаем отфильтрованный список
                     hideNames={hideNames}
                     spinTrigger={spinTrigger}
                     onSpinEnd={handleSpinEnd}
                     lastSelectedParticipant={lastSelectedParticipant}
                     spinDuration={spinDuration}
                     hideAfterSpin={hideAfterSpin}
+                    baseItemsPerSecond={baseItemsPerSecond}
                 />
             )}
 
@@ -253,7 +303,7 @@ function Roulette() {
                             onClick={toggleLock}
                             title={isLocked ? 'Разблокировать взаимодействие' : 'Заблокировать взаимодействие'}
                         >
-                            {isLocked ? <FaLock /> : <FaUnlock />}
+                            {isLocked ? <FaLock/> : <FaUnlock/>}
                         </button>
                     </div>
                     {!isListHidden && (
@@ -265,7 +315,7 @@ function Roulette() {
                                     disabled={isLocked || historyIndex <= 0}
                                     title="Отменить действие"
                                 >
-                                    <FaUndo />
+                                    <FaUndo/>
                                 </button>
                             </div>
                             <div className="switch-container">
@@ -275,7 +325,7 @@ function Roulette() {
                                     disabled={isLocked || historyIndex >= history.length - 1}
                                     title="Повторить действие"
                                 >
-                                    <FaRedo />
+                                    <FaRedo/>
                                 </button>
                             </div>
                         </>
@@ -286,54 +336,84 @@ function Roulette() {
                             onClick={() => setHideHidden(!hideHidden)}
                             title={hideHidden ? 'Показать выбывших' : 'Скрыть выбывших'}
                         >
-                            {hideHidden ? <FaEyeSlash /> : <FaEye />}
+                            {hideHidden ? <FaEyeSlash/> : <FaEye/>}
                         </button>
                     </div>
                     <div className="switch-container">
                         <button
                             className={`switch-button toggle-animations ${useAnimations ? 'active' : ''}`}
                             onClick={() => setUseAnimations(!useAnimations)}
-                            title={useAnimations ? 'Включить оптимизацию' : 'Включить КРАСОТУ (при большом списке будут просадки)'}
+                            title={useAnimations ? 'Включить оптимизацию' : 'Включить КРАСОТУ'}
                         >
-                            <FaMagic />
+                            <FaMagic/>
                         </button>
                     </div>
                 </div>
 
-                <div className={`participants-container ${useAnimations ? 'animated' : 'optimized'}`}>
-                    {useAnimations ? (
-                        <AnimatePresence>
-                            {visibleParticipants.map(participant => (
-                                <motion.div
-                                    key={participant.id}
-                                    layout
-                                    initial={{ x: -100, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    exit={{ x: -100, opacity: 0 }}
-                                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                                >
-                                    <Participant
-                                        name={participant.name}
-                                        isHidden={participant.isHidden}
-                                        onToggle={() => toggleParticipant(participant.id)}
-                                        color={participant.color}
-                                        useAnimations={useAnimations}
-                                        fixedEmoji={participant.emoji}
-                                    />
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                    ) : (
-                        <FixedSizeList
-                            height={window.innerHeight - 100}
-                            width={297}
-                            itemCount={visibleParticipants.length}
-                            itemSize={57}
-                            className="react-window-list"
+                {/* Обернем participants-container и shuffle-controls в один div */}
+                <div className="participants-content">
+                    <div className={`participants-container ${useAnimations ? 'animated' : 'optimized'}`}>
+                        {useAnimations ? (
+                            <AnimatePresence>
+                                {visibleParticipants.map(participant => (
+                                    <motion.div
+                                        key={participant.id}
+                                        layout
+                                        initial={{x: -100, opacity: 0}}
+                                        animate={{x: 0, opacity: 1}}
+                                        exit={{x: -100, opacity: 0}}
+                                        transition={{duration: 0.3, ease: "easeInOut"}}
+                                    >
+                                        <Participant
+                                            name={participant.name}
+                                            isHidden={participant.isHidden}
+                                            onToggle={() => toggleParticipant(participant.id)}
+                                            color={participant.color}
+                                            useAnimations={useAnimations}
+                                            fixedEmoji={participant.emoji}
+                                        />
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        ) : (
+                            <FixedSizeList
+                                height={window.innerHeight - 170}
+                                width={297}
+                                itemCount={visibleParticipants.length}
+                                itemSize={57}
+                                className="react-window-list"
+                            >
+                                {Row}
+                            </FixedSizeList>
+                        )}
+                    </div>
+
+                    <div className="shuffle-controls">
+                        <button
+                            className={`switch-button shuffle-button ${isLocked ? 'disabled' : ''}`}
+                            onClick={shuffleParticipants}
+                            disabled={isLocked}
+                            title="Перемешать участников"
                         >
-                            {Row}
-                        </FixedSizeList>
-                    )}
+                            <FaRandom/>
+                        </button>
+                        <div className="max-same-nicknames-control">
+                            <label htmlFor="max-same-nicknames" className="max-same-nicknames-label">
+                                Макс. одинаковых: {maxSameNicknames === maxDuplicates ? '∞' : maxSameNicknames}
+                            </label>
+                            <input
+                                type="range"
+                                id="max-same-nicknames"
+                                min="1"
+                                max={maxDuplicates}
+                                step="1"
+                                value={maxSameNicknames}
+                                onChange={(e) => setMaxSameNicknames(parseInt(e.target.value))}
+                                className="max-same-nicknames-slider"
+                                disabled={isLocked}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -372,7 +452,10 @@ function Roulette() {
                     </div>
                     <div className="spin-duration-control">
                         <label htmlFor="spin-duration" className="spin-duration-label">
-                            Время вращения: {spinDuration === 0 ? 'Мгновенно' : `${spinDuration} сек`}
+                            {displayMode === 'wheel'
+                                ? `Время вращения: `
+                                : `Время прокрутки: `}
+                            {spinDuration === 0 ? 'Мгновенно' : `${spinDuration} сек`}
                         </label>
                         <input
                             type="range"
@@ -383,6 +466,23 @@ function Roulette() {
                             value={spinDuration}
                             onChange={handleSpinDurationChange}
                             className="spin-duration-slider"
+                        />
+                    </div>
+                    <div className="scroll-speed-control">
+                        <label htmlFor="scroll-speed" className="scroll-speed-label">
+                            {displayMode === 'wheel'
+                                ? `Скорость вращения: ${scrollSpeed}°/с`
+                                : `Длина прокрутки: ${baseItemsPerSecond} эл/с`}
+                        </label>
+                        <input
+                            type="range"
+                            id="scroll-speed"
+                            min={displayMode === 'wheel' ? "180" : "2"}
+                            max={displayMode === 'wheel' ? "1440" : "100"}
+                            step={displayMode === 'wheel' ? "10" : "1"}
+                            value={displayMode === 'wheel' ? scrollSpeed : baseItemsPerSecond}
+                            onChange={handleScrollSpeedChange}
+                            className="scroll-speed-slider"
                         />
                     </div>
                 </div>

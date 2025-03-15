@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import './Wheel.css';
 
-function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedParticipant, spinDuration }) {
+function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedParticipant, spinDuration, angularSpeed }) {
     const [selectedParticipant, setSelectedParticipant] = useState(null);
     const [rotation, setRotation] = useState(0);
     const [size] = useState(() => Math.min(window.innerHeight * 0.8, window.innerWidth * 0.8));
@@ -14,6 +14,28 @@ function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedPa
     const controls = useAnimation();
 
     const activeParticipants = participants.filter(p => !p.isHidden);
+
+    const [currentImageNumber, setCurrentImageNumber] = useState(Math.floor(Math.random() * 18) + 1);
+    const [isImageHovered, setIsImageHovered] = useState(false);
+    const imageControls = useAnimation();
+
+    const handleCenterClick = async () => {
+        await imageControls.start({
+            scale: 0.8,
+            rotate: Math.floor(Math.random() * 120 - 60 + 1),
+            opacity: 0,
+            transition: { duration: 0.2, ease: "easeIn" }
+        });
+
+        setCurrentImageNumber(Math.floor(Math.random() * 18) + 1);
+
+        await imageControls.start({
+            scale: 1,
+            rotate: 0,
+            opacity: 1,
+            transition: { duration: 0.3, type: "spring", stiffness: 150 }
+        });
+    };
 
     const getParticipantUnderPointer = (currentRotation) => {
         if (activeParticipants.length === 0) return null;
@@ -64,9 +86,8 @@ function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedPa
             setLastSpinTrigger(spinTrigger);
             setLocalIsSpinning(true);
 
-            const angularSpeed = 720;
             const totalRotation = angularSpeed * Math.min(spinDuration, 10);
-            const additionalAngle = Math.random() * 360;
+            const additionalAngle = Math.random() * angularSpeed;
             const newRotation = rotation + totalRotation + additionalAngle;
 
             if (spinDuration === 0) {
@@ -320,19 +341,54 @@ function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedPa
                         <circle
                             cx={center}
                             cy={center}
-                            r={size / 12}
+                            r={size / 9}
                             fill="#2a2a2a"
                             stroke="#e0e0e0"
                             strokeWidth="2"
                         />
                     </motion.g>
-                    <circle
-                        cx={center}
-                        cy={center}
-                        r={5}
-                        fill="#e0e0e0"
-                        stroke="none"
-                    />
+
+                    <motion.g
+                        animate={imageControls}
+                        initial={{scale: 1, rotate: 0, opacity: 1}}
+                        whileHover={{
+                            scale: 1.1,
+                            rotate: 5,
+                            transition: {duration: 0.2}
+                        }}
+                    >
+                        <motion.image
+                            href={`garbaphoto/${currentImageNumber}.webp`}
+                            x={center - (size / 10)}
+                            y={center - (size / 10)}
+                            width={size / 5}
+                            height={size / 5}
+                            onClick={handleCenterClick}
+                            onHoverStart={() => setIsImageHovered(true)}
+                            onHoverEnd={() => setIsImageHovered(false)}
+                            style={{cursor: 'pointer'}}
+                            clipPath="url(#circleClip)"
+                            animate={{
+                                rotate: localIsSpinning ? 360 : 0,
+                                transition: {
+                                    duration: 10,
+                                    repeat: localIsSpinning ? Infinity : 0,
+                                    ease: "linear"
+                                }
+                            }}
+                        />
+                    </motion.g>
+
+                    <defs>
+                        <clipPath id="circleClip">
+                            <circle
+                                cx={center}
+                                cy={center}
+                                r={size / 10}
+                            />
+                        </clipPath>
+                    </defs>
+
                     <polygon
                         points={`${center - 20},${center - radius - 20} ${center + 20},${center - radius - 20} ${center},${center - radius + 10}`}
                         fill="#e0e0e0"
@@ -494,12 +550,12 @@ function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedPa
                 height={size}
                 viewBox={`0 0 ${size} ${size}`}
                 className="wheel-svg"
-                style={{ overflow: 'hidden' }}
+                style={{overflow: 'hidden'}}
             >
                 <motion.g
                     animate={controls}
-                    initial={{ rotate: rotation }}
-                    style={{ transformOrigin: "50% 50%" }}
+                    initial={{rotate: rotation}}
+                    style={{transformOrigin: "50% 50%"}}
                     onUpdate={(latest) => {
                         if (localIsSpinning && spinDuration > 0) {
                             const currentRotation = latest.rotate || 0;
@@ -509,7 +565,7 @@ function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedPa
                     }}
                 >
                     {sectors.map((sector, index) => {
-                        const { participant, sameNameCount, startIndex } = sector;
+                        const {participant, sameNameCount, startIndex} = sector;
                         const startAngle = angleStep * startIndex;
                         const endAngle = startAngle + angleStep * sameNameCount;
                         const largeArcFlag = endAngle - startAngle <= Math.PI ? 0 : 1;
@@ -571,20 +627,53 @@ function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedPa
                     <circle
                         cx={center}
                         cy={center}
-                        r={size / 12}
+                        r={size / 9}
                         fill="#2a2a2a"
                         stroke="#e0e0e0"
                         strokeWidth="2"
                     />
                 </motion.g>
 
-                <circle
-                    cx={center}
-                    cy={center}
-                    r={5}
-                    fill="#e0e0e0"
-                    stroke="none"
-                />
+                <motion.g
+                    animate={imageControls}
+                    initial={{scale: 1, rotate: 0, opacity: 1}}
+                    whileHover={{
+                        scale: 1.1,
+                        rotate: 5,
+                        transition: {duration: 0.2}
+                    }}
+                >
+                    <motion.image
+                        href={`garbaphoto/${currentImageNumber}.webp`}
+                        x={center - (size / 10)}
+                        y={center - (size / 10)}
+                        width={size / 5}
+                        height={size / 5}
+                        onClick={handleCenterClick}
+                        onHoverStart={() => setIsImageHovered(true)}
+                        onHoverEnd={() => setIsImageHovered(false)}
+                        style={{cursor: 'pointer'}}
+                        clipPath="url(#circleClip)"
+                        animate={{
+                            rotate: localIsSpinning ? 360 : 0,
+                            transition: {
+                                duration: 10,
+                                repeat: localIsSpinning ? Infinity : 0,
+                                ease: "linear"
+                            }
+                        }}
+                    />
+                </motion.g>
+
+                <defs>
+                    <clipPath id="circleClip">
+                        <circle
+                            cx={center}
+                            cy={center}
+                            r={size / 10}
+                        />
+                    </clipPath>
+                </defs>
 
                 <polygon
                     points={`${center - 20},${center - radius - 20} ${center + 20},${center - radius - 20} ${center},${center - radius + 10}`}
