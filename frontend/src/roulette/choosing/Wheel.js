@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useAnimation } from 'framer-motion';
-import './Roulette.css';
+import './Wheel.css';
 
-function Wheel({ participants, hideHidden, hideNames, spinTrigger, onSpinEnd, lastSelectedParticipant, useAnimations, spinDuration, isSpinning }) {
+function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedParticipant, spinDuration }) {
     const [selectedParticipant, setSelectedParticipant] = useState(null);
     const [rotation, setRotation] = useState(0);
     const [size] = useState(() => Math.min(window.innerHeight * 0.8, window.innerWidth * 0.8));
@@ -13,10 +13,9 @@ function Wheel({ participants, hideHidden, hideNames, spinTrigger, onSpinEnd, la
     const spinTimeoutRef = useRef(null);
     const controls = useAnimation();
 
-    console.log("Инициализирован размер SVG:", size, "Центр:", initialCenter);
+    const activeParticipants = participants.filter(p => !p.isHidden);
 
     const getParticipantUnderPointer = (currentRotation) => {
-        const activeParticipants = participants.filter(p => !p.isHidden);
         if (activeParticipants.length === 0) return null;
         if (activeParticipants.length === 1) return activeParticipants[0];
 
@@ -25,8 +24,6 @@ function Wheel({ participants, hideHidden, hideNames, spinTrigger, onSpinEnd, la
         const pointerAngle = 3 * Math.PI / 2;
 
         const currentAngle = (currentRotation * Math.PI / 180) % (2 * Math.PI);
-        console.log("Текущий угол вращения:", currentAngle * 180 / Math.PI);
-
         let selectedIndex = -1;
         let currentIndex = 0;
 
@@ -44,19 +41,15 @@ function Wheel({ participants, hideHidden, hideNames, spinTrigger, onSpinEnd, la
 
             const startAngle = angleStep * currentIndex;
             const endAngle = startAngle + angleStep * sameNameCount;
-            console.log(`Сектор ${currentIndex}: startAngle=${startAngle * 180 / Math.PI}°, endAngle=${endAngle * 180 / Math.PI}°`);
-
             const sectorStart = startAngle;
             const sectorEnd = endAngle;
             const adjustedPointer = (pointerAngle - currentAngle + 2 * Math.PI) % (2 * Math.PI);
-            console.log(`Скорректированный указатель: ${adjustedPointer * 180 / Math.PI}°, сектор: ${sectorStart * 180 / Math.PI}° - ${sectorEnd * 180 / Math.PI}°`);
 
             if (
                 (sectorStart <= sectorEnd && adjustedPointer >= sectorStart && adjustedPointer <= sectorEnd) ||
                 (sectorStart > sectorEnd && (adjustedPointer >= sectorStart || adjustedPointer <= sectorEnd))
             ) {
                 selectedIndex = currentIndex;
-                console.log("Выбран участник:", participant.name);
                 break;
             }
 
@@ -67,13 +60,11 @@ function Wheel({ participants, hideHidden, hideNames, spinTrigger, onSpinEnd, la
     };
 
     useEffect(() => {
-        const activeParticipants = participants.filter(p => !p.isHidden);
         if (spinTrigger > lastSpinTrigger && !localIsSpinning && activeParticipants.length > 0) {
-            console.log("spinTrigger изменился, начинаем вращение");
             setLastSpinTrigger(spinTrigger);
             setLocalIsSpinning(true);
 
-            const angularSpeed = 720; // Градусов в секунду
+            const angularSpeed = 720;
             const totalRotation = angularSpeed * Math.min(spinDuration, 10);
             const additionalAngle = Math.random() * 360;
             const newRotation = rotation + totalRotation + additionalAngle;
@@ -113,7 +104,6 @@ function Wheel({ participants, hideHidden, hideNames, spinTrigger, onSpinEnd, la
                         const finalParticipant = getParticipantUnderPointer(newRotation);
                         setSelectedParticipant(finalParticipant);
                         if (onSpinEnd) onSpinEnd(finalParticipant);
-                        console.log("Вращение завершено");
                     });
                 });
 
@@ -131,7 +121,6 @@ function Wheel({ participants, hideHidden, hideNames, spinTrigger, onSpinEnd, la
     }, []);
 
     useEffect(() => {
-        const activeParticipants = participants.filter(p => !p.isHidden);
         if (activeParticipants.length === 1) {
             setSelectedParticipant(activeParticipants[0]);
         }
@@ -141,12 +130,79 @@ function Wheel({ participants, hideHidden, hideNames, spinTrigger, onSpinEnd, la
 
     const radius = size / 2 - 20;
     const center = initialCenter;
-    const activeParticipants = participants.filter(p => !p.isHidden);
     const totalParticipants = activeParticipants.length;
 
-    if (totalParticipants === 0) return null;
-
     const displayParticipant = localIsSpinning ? selectedParticipant : (totalParticipants === 1 ? activeParticipants[0] : lastSelectedParticipant);
+
+    if (totalParticipants === 0) {
+        return (
+            <div className="wheel-container">
+                <motion.div
+                    className="selected-participant"
+                    style={{
+                        background: 'linear-gradient(135deg, #5a6b7f, #2a2a2a)',
+                    }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                >
+                    <>
+                        <motion.span
+                            initial={{opacity: 0, scale: 0.5}}
+                            animate={{opacity: 1, scale: 1}}
+                            whileHover={{scale: 1.15}}
+                            transition={{duration: 0.5, delay: 0.2, type: "spring", stiffness: 100}}
+                        >
+                            Пусто
+                        </motion.span>
+                        <motion.span
+                            className="emoji"
+                            initial={{opacity: 0, scale: 0.5}}
+                            animate={{opacity: 1, scale: 1}}
+                            whileHover={{scale: 1.15}}
+                            transition={{duration: 0.5, delay: 0.3, type: "spring", stiffness: 100}}
+                        >
+                            🤷
+                        </motion.span>
+                    </>
+                </motion.div>
+                <svg
+                    width={size}
+                    height={size}
+                    viewBox={`0 0 ${size} ${size}`}
+                    className="wheel-svg"
+                    style={{overflow: 'hidden'}}
+                >
+                    <circle
+                        cx={center}
+                        cy={center}
+                        r={radius}
+                        fill="#3a3a3a"
+                        stroke="#e0e0e0"
+                        strokeWidth="2"
+                    />
+                    <text
+                        x={center}
+                        y={center}
+                        fontFamily="Inter"
+                        fontSize={Math.max(12, size / 20)}
+                        fill="#e0e0e0"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                    >
+                        Никого не осталось 🥲
+                    </text>
+                    <polygon
+                        points={`${center - 20},${center - radius - 20} ${center + 20},${center - radius - 20} ${center},${center - radius + 10}`}
+                        fill="#e0e0e0"
+                        stroke="#2a2a2a"
+                        strokeWidth="2"
+                    />
+                </svg>
+            </div>
+        );
+    }
 
     if (totalParticipants === 1) {
         const participant = activeParticipants[0];

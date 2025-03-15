@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './Home';
-import Roulette from './Roulette.js';
+import Home from './home/Home';
+import Roulette from './roulette/Roulette.js';
 
 function App() {
   return (

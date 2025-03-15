@@ -73,34 +73,6 @@
     margin-bottom: 10px;
 }
 
-.left-controls-group,
-.right-controls-group {
-    display: flex;
-    align-items: center;
-    gap: 10px; /* Расстояние между кнопками в группах */
-}
-
-.toggle-monochrome {
-    margin-left: 10px;
-}
-
-.toggle-monochrome.active {
-    background: linear-gradient(135deg, #5a6b7f, #3a3a3a);
-}
-
-.toggle-monochrome:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-    background: linear-gradient(135deg, #444444, #2a2a2a);
-}
-
-.left-controls-group,
-.right-controls-group {
-    display: flex;
-    align-items: center;
-    gap: 10px; /* Расстояние между кнопками в группах */
-}
-
 .toggle-monochrome {
     margin-left: 10px;
 }
@@ -186,8 +158,7 @@
 }
 
 .participants-container {
-    flex-grow: 1;
-    max-height: calc(100vh - 74px);
+    height: calc(100vh - 100px);
     overflow-y: auto;
     overflow-x: hidden !important;
 }
@@ -489,38 +460,9 @@
     flex-grow: 1;
 }
 
-.wheel-container {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    perspective: 1000px;
-    perspective-origin: 50% 50%;
-}
-
-.wheel-svg {
-    position: relative;
-    margin-top: 10vh;
-    transform-origin: center center;
-    will-change: transform;
-}
-
 .selected-participant .emoji {
     margin-left: 10px;
     font-size: 24px;
-}
-
-:root {
-    --wheel-top-offset: 10vh;
-}
-
-@media (max-aspect-ratio: 1/1) {
-    :root {
-        --wheel-top-offset: 0vh;
-    }
 }
 
 .toggle-names {
@@ -593,9 +535,6 @@
 }
 
 @media (max-aspect-ratio: 1/1) {
-    .wheel-svg {
-        margin-top: -5vh;
-    }
     .selected-participant {
         font-size: 16px;
         padding: 8px 16px;
@@ -605,15 +544,12 @@
     }
 }
 
-/* Существующие стили остаются, добавляем новые в конец */
-
-/* Контейнер для настройки времени вращения */
 .spin-duration-control {
     padding: 15px;
     background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
     border-radius: 12px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    margin-top: 10px;
+    margin: 10px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -622,7 +558,6 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Метка */
 .spin-duration-label {
     display: block;
     font-family: 'Inter', sans-serif;
@@ -726,7 +661,7 @@
         width: 200px;
         height: 50px;
         border-radius: 12px;
-        background: linear-gradient(135deg, #4CAF50, #388E3C); /* Зеленый оттенок */
+        background: linear-gradient(135deg, #4CAF50, #388E3C);
         font-family: 'Inter', sans-serif;
         font-size: 18px;
         font-weight: 500;
@@ -749,4 +684,34 @@
         transform: translateX(-50%);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
+}
+
+.switch-display-mode {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5a6b7f, #3a3a3a);
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    color: #e0e0e0;
+    cursor: pointer;
+    font-size: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+    z-index: 20;
+}
+
+.switch-display-mode:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, #6a7b8f, #4a5a6f);
+}
+
+.switch-display-mode:active {
+    transform: scale(0.95);
 }

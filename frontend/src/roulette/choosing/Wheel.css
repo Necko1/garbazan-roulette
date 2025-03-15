@@ -1,0 +1,31 @@
+.wheel-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    perspective: 1000px;
+    perspective-origin: 50% 50%;
+}
+
+.wheel-svg {
+    position: relative;
+    margin-top: 10vh;
+    transform-origin: center center;
+    will-change: transform;
+}
+
+:root {
+    --wheel-top-offset: 10vh;
+}
+
+@media (max-aspect-ratio: 1/1) {
+    :root {
+        --wheel-top-offset: 0vh;
+    }
+    .wheel-svg {
+        margin-top: -5vh;
+    }
+}
