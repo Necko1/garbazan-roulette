@@ -193,7 +193,16 @@ function Roulette() {
         };
 
         fetchParticipants();
-    }, [uuid, isMonochrome]);
+    }, [uuid]);
+
+    useEffect(() => {
+        setParticipants(prevParticipants =>
+            prevParticipants.map(participant => ({
+                ...participant,
+                color: generateColor(participant.name, isMonochrome)
+            }))
+        );
+    }, [isMonochrome]);
 
     const toggleParticipant = (id) => {
         if (isLocked) return;
@@ -291,13 +300,7 @@ function Roulette() {
     const toggleHideNames = () => setHideNames(!hideNames);
     const toggleHideAfterSpin = () => setHideAfterSpin(!hideAfterSpin);
     const toggleMonochrome = () => {
-        const newMonochrome = !isMonochrome;
-        setIsMonochrome(newMonochrome);
-        const updatedParticipants = participants.map(participant => ({
-            ...participant,
-            color: generateColor(participant.name, newMonochrome)
-        }));
-        setParticipants(updatedParticipants);
+        setIsMonochrome(prev => !prev);
     };
     const toggleDisplayMode = () => {
         const newMode = displayMode === 'wheel' ? 'case' : 'wheel';
