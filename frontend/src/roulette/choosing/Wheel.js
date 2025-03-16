@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import './Wheel.css';
+import SelectedParticipant from "../elements/SelectedParticipant";
+import GarbaPhoto from "../elements/GarbaPhoto";
 
-function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedParticipant, spinDuration, angularSpeed }) {
+function Wheel({participants, hideNames, spinTrigger, onSpinEnd, lastSelectedParticipant, spinDuration, angularSpeed}) {
     const [selectedParticipant, setSelectedParticipant] = useState(null);
     const [rotation, setRotation] = useState(0);
     const [size] = useState(() => Math.min(window.innerHeight * 0.8, window.innerWidth * 0.8));
@@ -16,26 +18,6 @@ function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedPa
     const activeParticipants = participants.filter(p => !p.isHidden);
 
     const [currentImageNumber, setCurrentImageNumber] = useState(Math.floor(Math.random() * 18) + 1);
-    const [isImageHovered, setIsImageHovered] = useState(false);
-    const imageControls = useAnimation();
-
-    const handleCenterClick = async () => {
-        await imageControls.start({
-            scale: 0.8,
-            rotate: Math.floor(Math.random() * 120 - 60 + 1),
-            opacity: 0,
-            transition: { duration: 0.2, ease: "easeIn" }
-        });
-
-        setCurrentImageNumber(Math.floor(Math.random() * 18) + 1);
-
-        await imageControls.start({
-            scale: 1,
-            rotate: 0,
-            opacity: 1,
-            transition: { duration: 0.3, type: "spring", stiffness: 150 }
-        });
-    };
 
     const getParticipantUnderPointer = (currentRotation) => {
         if (activeParticipants.length === 0) return null;
@@ -87,7 +69,7 @@ function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedPa
             setLocalIsSpinning(true);
 
             const totalRotation = angularSpeed * Math.min(spinDuration, 10);
-            const additionalAngle = Math.random() * angularSpeed;
+            const additionalAngle = Math.random() * 360; // random angle on the wheel
             const newRotation = rotation + totalRotation + additionalAngle;
 
             if (spinDuration === 0) {
@@ -249,59 +231,13 @@ function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedPa
 
         return (
             <div className="wheel-container">
-                <motion.div
-                    className="selected-participant"
-                    style={{
-                        background: `linear-gradient(135deg, ${participant.color || '#5a6b7f'}, #2a2a2a)`,
-                    }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    onHoverStart={() => setIsHovered(true)}
-                    onHoverEnd={() => setIsHovered(false)}
-                >
-                    {hideNames && !isHovered ? (
-                        <>
-                            <motion.span
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                whileHover={{ scale: 1.15 }}
-                                transition={{ duration: 0.5, delay: 0.2, type: "spring", stiffness: 100 }}
-                            >
-                                ...
-                            </motion.span>
-                            <motion.span
-                                className="question-emoji"
-                                initial={{ scale: 1 }}
-                                whileHover={{ scale: 1.4 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                ❓
-                            </motion.span>
-                        </>
-                    ) : (
-                        <>
-                            <motion.span
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                whileHover={{ scale: 1.15 }}
-                                transition={{ duration: 0.5, delay: 0.2, type: "spring", stiffness: 100 }}
-                            >
-                                {participant.name}
-                            </motion.span>
-                            <motion.span
-                                className="emoji"
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                whileHover={{ scale: 1.15 }}
-                                transition={{ duration: 0.5, delay: 0.3, type: "spring", stiffness: 100 }}
-                            >
-                                {participant.emoji}
-                            </motion.span>
-                        </>
-                    )}
-                </motion.div>
+                <SelectedParticipant
+                    displayParticipant={displayParticipant}
+                    localIsSpinning={localIsSpinning}
+                    hideNames={hideNames}
+                    isHovered={isHovered}
+                    setIsHovered={setIsHovered}
+                />
                 <svg
                     width={size}
                     height={size}
@@ -348,46 +284,12 @@ function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedPa
                         />
                     </motion.g>
 
-                    <motion.g
-                        animate={imageControls}
-                        initial={{scale: 1, rotate: 0, opacity: 1}}
-                        whileHover={{
-                            scale: 1.1,
-                            rotate: 5,
-                            transition: {duration: 0.2}
-                        }}
-                    >
-                        <motion.image
-                            href={`garbaphoto/${currentImageNumber}.webp`}
-                            x={center - (size / 10)}
-                            y={center - (size / 10)}
-                            width={size / 5}
-                            height={size / 5}
-                            onClick={handleCenterClick}
-                            onHoverStart={() => setIsImageHovered(true)}
-                            onHoverEnd={() => setIsImageHovered(false)}
-                            style={{cursor: 'pointer'}}
-                            clipPath="url(#circleClip)"
-                            animate={{
-                                rotate: localIsSpinning ? 360 : 0,
-                                transition: {
-                                    duration: 10,
-                                    repeat: localIsSpinning ? Infinity : 0,
-                                    ease: "linear"
-                                }
-                            }}
-                        />
-                    </motion.g>
-
-                    <defs>
-                        <clipPath id="circleClip">
-                            <circle
-                                cx={center}
-                                cy={center}
-                                r={size / 10}
-                            />
-                        </clipPath>
-                    </defs>
+                    <GarbaPhoto
+                        currentImageNumber={currentImageNumber}
+                        setCurrentImageNumber={setCurrentImageNumber}
+                        center={center}
+                        size={size}
+                    />
 
                     <polygon
                         points={`${center - 20},${center - radius - 20} ${center + 20},${center - radius - 20} ${center},${center - radius + 10}`}
@@ -427,124 +329,13 @@ function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedPa
 
     return (
         <div className="wheel-container">
-            <motion.div
-                className="selected-participant"
-                style={{
-                    background: displayParticipant
-                        ? `linear-gradient(135deg, ${displayParticipant.color || '#5a6b7f'}, #2a2a2a)`
-                        : 'linear-gradient(135deg, #5a6b7f, #2a2a2a)',
-                }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                onHoverStart={() => setIsHovered(true)}
-                onHoverEnd={() => setIsHovered(false)}
-            >
-                {displayParticipant ? (
-                    localIsSpinning && hideNames ? (
-                        <>
-                            <motion.span
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                whileHover={{ scale: 1.15 }}
-                                transition={{ duration: 0.5, delay: 0.2, type: "spring", stiffness: 100 }}
-                            >
-                                ...
-                            </motion.span>
-                            <motion.span
-                                className="question-emoji"
-                                initial={{ scale: 1 }}
-                                whileHover={{ scale: 1.4 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                ❓
-                            </motion.span>
-                        </>
-                    ) : localIsSpinning && !hideNames ? (
-                        <>
-                            <motion.span
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                whileHover={{ scale: 1.15 }}
-                                transition={{ duration: 0.5, delay: 0.2, type: "spring", stiffness: 100 }}
-                            >
-                                {displayParticipant.name}
-                            </motion.span>
-                            <motion.span
-                                className="emoji"
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                whileHover={{ scale: 1.15 }}
-                                transition={{ duration: 0.5, delay: 0.3, type: "spring", stiffness: 100 }}
-                            >
-                                {displayParticipant.emoji}
-                            </motion.span>
-                        </>
-                    ) : (
-                        hideNames && !isHovered ? (
-                            <>
-                                <motion.span
-                                    initial={{ opacity: 0, scale: 0.5 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    whileHover={{ scale: 1.15 }}
-                                    transition={{ duration: 0.5, delay: 0.2, type: "spring", stiffness: 100 }}
-                                >
-                                    ...
-                                </motion.span>
-                                <motion.span
-                                    className="question-emoji"
-                                    initial={{ scale: 1 }}
-                                    whileHover={{ scale: 1.4 }}
-                                    transition={{ duration: 0.3 }}
-                                >
-                                    ❓
-                                </motion.span>
-                            </>
-                        ) : (
-                            <>
-                                <motion.span
-                                    initial={{ opacity: 0, scale: 0.5 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    whileHover={{ scale: 1.15 }}
-                                    transition={{ duration: 0.5, delay: 0.2, type: "spring", stiffness: 100 }}
-                                >
-                                    {displayParticipant.name}
-                                </motion.span>
-                                <motion.span
-                                    className="emoji"
-                                    initial={{ opacity: 0, scale: 0.5 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    whileHover={{ scale: 1.15 }}
-                                    transition={{ duration: 0.5, delay: 0.3, type: "spring", stiffness: 100 }}
-                                >
-                                    {displayParticipant.emoji}
-                                </motion.span>
-                            </>
-                        )
-                    )
-                ) : (
-                    <>
-                        <motion.span
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            whileHover={{ scale: 1.15 }}
-                            transition={{ duration: 0.5, delay: 0.2, type: "spring", stiffness: 100 }}
-                        >
-                            Крути
-                        </motion.span>
-                        <motion.span
-                            className="emoji"
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            whileHover={{ scale: 1.15 }}
-                            transition={{ duration: 0.5, delay: 0.3, type: "spring", stiffness: 100 }}
-                        >
-                            ✨
-                        </motion.span>
-                    </>
-                )}
-            </motion.div>
+            <SelectedParticipant
+                displayParticipant={displayParticipant}
+                localIsSpinning={localIsSpinning}
+                hideNames={hideNames}
+                isHovered={isHovered}
+                setIsHovered={setIsHovered}
+            />
             <svg
                 width={size}
                 height={size}
@@ -634,46 +425,12 @@ function Wheel({ participants, hideNames, spinTrigger, onSpinEnd, lastSelectedPa
                     />
                 </motion.g>
 
-                <motion.g
-                    animate={imageControls}
-                    initial={{scale: 1, rotate: 0, opacity: 1}}
-                    whileHover={{
-                        scale: 1.1,
-                        rotate: 5,
-                        transition: {duration: 0.2}
-                    }}
-                >
-                    <motion.image
-                        href={`garbaphoto/${currentImageNumber}.webp`}
-                        x={center - (size / 10)}
-                        y={center - (size / 10)}
-                        width={size / 5}
-                        height={size / 5}
-                        onClick={handleCenterClick}
-                        onHoverStart={() => setIsImageHovered(true)}
-                        onHoverEnd={() => setIsImageHovered(false)}
-                        style={{cursor: 'pointer'}}
-                        clipPath="url(#circleClip)"
-                        animate={{
-                            rotate: localIsSpinning ? 360 : 0,
-                            transition: {
-                                duration: 10,
-                                repeat: localIsSpinning ? Infinity : 0,
-                                ease: "linear"
-                            }
-                        }}
-                    />
-                </motion.g>
-
-                <defs>
-                    <clipPath id="circleClip">
-                        <circle
-                            cx={center}
-                            cy={center}
-                            r={size / 10}
-                        />
-                    </clipPath>
-                </defs>
+                <GarbaPhoto
+                    currentImageNumber={currentImageNumber}
+                    setCurrentImageNumber={setCurrentImageNumber}
+                    center={center}
+                    size={size}
+                />
 
                 <polygon
                     points={`${center - 20},${center - radius - 20} ${center + 20},${center - radius - 20} ${center},${center - radius + 10}`}

@@ -166,7 +166,7 @@
 }
 
 .participants-container {
-    height: calc(100vh - 165px); /* Уменьшил высоту для новых элементов */
+    height: calc(100vh - 165px);
     overflow-y: auto;
     overflow-x: hidden !important;
 }
@@ -325,7 +325,7 @@
 
 .right-panel-container {
     flex-grow: 1;
-    max-height: calc(100vh - 74px);
+    max-height: calc(100vh - 18px);
     overflow-y: auto;
     overflow-x: hidden !important;
 }
@@ -882,4 +882,220 @@
 .scroll-speed-slider::-moz-range-thumb:hover {
     transform: scale(1.2);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.github-link {
+    position: fixed;
+    bottom: -25px; /* Пониже: было 20px, теперь 40px */
+    left: 348px; /* 328px (ширина панели) + 20px отступ */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px; /* Увеличено в 1.5 раза: было 40px, теперь 60px */
+    height: 60px; /* Увеличено в 1.5 раза: было 40px, теперь 60px */
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
+    color: #e0e0e0;
+    font-size: 36px; /* Увеличено в 1.5 раза: было 24px, теперь 36px */
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: left 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+    z-index: 9; /* Ниже панели и toggle-area */
+}
+
+.github-link.list-hidden {
+    left: 20px; /* Отступ от края экрана при скрытой панели */
+}
+
+.github-link:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, #444444, #2a2a2a);
+}
+
+.github-link:active {
+    transform: scale(0.95);
+}
+
+.auto-scroll-control {
+    padding: 15px;
+    background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auto-scroll-control:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.auto-scroll-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 40px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #5a6b7f, #3a3a3a);
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    color: #e0e0e0;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+    margin-bottom: 10px;
+}
+
+.auto-scroll-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, #6a7b8f, #4a5a6f);
+}
+
+.auto-scroll-button.active {
+    background: linear-gradient(135deg, #ff6b6b, #e03a3a);
+}
+
+.auto-scroll-button.active:hover {
+    background: linear-gradient(135deg, #ff8787, #ff6b6b);
+}
+
+.auto-scroll-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.auto-scroll-label {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #e0e0e0;
+    text-align: center;
+}
+
+.stop-at-input {
+    width: 95%;
+    padding: 5px;
+    background: #3a3a3a;
+    border: 1px solid #444444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    text-align: center;
+}
+
+.stop-at-input:focus {
+    outline: none;
+    border-color: #5a6b7f;
+}
+
+.random-values-control {
+    padding: 15px;
+    background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.random-values-control:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.random-values-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 40px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #5a6b7f, #3a3a3a);
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    color: #e0e0e0;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+    margin-bottom: 10px;
+}
+
+.random-values-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, #6a7b8f, #4a5a6f);
+}
+
+.random-values-button.active {
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+}
+
+.random-values-button.active:hover {
+    background: linear-gradient(135deg, #66BB6A, #4CAF50);
+}
+
+.random-values-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.random-values-label {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #e0e0e0;
+    text-align: center;
+}
+
+.panel-divider {
+    border: 0;
+    height: 1px;
+    background: #444444;
+    margin: 10px 0;
+}
+
+.copy-link-button {
+    position: fixed;
+    bottom: 20px;
+    right: 85px; /* Увеличил отступ, чтобы учесть больший размер */
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6a6a6a, #3a3a3a);
+    border: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    color: #e0e0e0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    z-index: 1000;
+}
+
+.copy-link-button:hover {
+    background: linear-gradient(135deg, #7a7a7a, #4a4a4a);
+    transform: scale(1.1);
+}
+
+.copy-link-button:active {
+    transform: scale(0.95);
+}
+
+.copy-link-button svg {
+    margin: 0;
 }
